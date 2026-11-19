@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#17130d">
+  <link rel="icon" type="image/svg+xml" href="perbal-favicon.svg">
+  <title>PERBÁL – Mini játékok</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="PERBÁL főoldal"><span class="brand-mark">✦</span> PERBÁL</a>
+    <span class="top-note">Öt klasszikus</span>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="eyebrow">MINI JÁTÉKGYŰJTEMÉNY</div>
+      <h1>Válassz egy <span>játékot</span></h1>
+      <p>Gyors és egyszerű játékok közvetlenül a böngésződben.</p>
+    </section>
+
+    <nav class="game-tabs" aria-label="Játékok">
+      <button class="tab active" data-game="battleship"><span>🚢</span> Torpedó</button>
+      <button class="tab" data-game="tic"><span>⭕</span> Amőba</button>
+      <button class="tab" data-game="memory"><span>🧠</span> Memória</button>
+      <button class="tab" data-game="breakout"><span>🧱</span> Falbontó</button>
+      <button class="tab" data-game="snake"><span>🐍</span> Kígyó</button>
+    </nav>
+
+    <section class="game-panel">
+      <div class="panel-heading">
+        <div>
+          <div class="eyebrow" id="game-kicker">STRATÉGIA • 1 JÁTÉKOS</div>
+          <h2 id="game-title">Torpedó</h2>
+          <p id="game-description">Találd el az ellenfél elrejtett hajóit a rácson!</p>
+        </div>
+        <button class="reset-btn" id="reset-game">↻ Újrakezdés</button>
+      </div>
+      <div id="game-content" class="game-content"></div>
+    </section>
+    <footer>PERBÁL <span>•</span> Készült kikapcsolódáshoz.</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
