@@ -22,7 +22,7 @@ function renderTic(){
 function renderMemory(){let icons=['🍋','🚀','🐙','🎸','🍀','🦊','🌙','⚽','🍓','🎨','🐳','🌵','🧩','🎧','🦋','🍉','🪐','🦉','🎲','🌻'],deck=[...icons,...icons].sort(()=>Math.random()-.5),first=null,lock=false,moves=0,pairs=0;content.innerHTML=statusMarkup('Fordíts fel két kártyát, és keresd a párokat! 20 pár vár rád.')+`<div class="memory-board" id="memory-board"></div><div class="scoreline">LÉPÉS: <strong id="moves">0</strong>　·　PÁR: <strong id="pairs">0 / 20</strong></div>`;let board=$('#memory-board');deck.forEach(emoji=>{let b=document.createElement('button');b.className='memory-card';b.textContent='?';b.setAttribute('aria-label','Lefordított kártya');b.onclick=()=>{if(lock||b.classList.contains('open')||b.classList.contains('done'))return;b.textContent=emoji;b.classList.add('open');if(!first){first={b,emoji};return}moves++;$('#moves').textContent=moves;if(first.emoji===emoji){b.classList.replace('open','done');first.b.classList.replace('open','done');first=null;pairs++;$('#pairs').textContent=`${pairs} / 20`;if(pairs===20)setStatus(`<strong>Szép munka!</strong> Mind a 20 pár megvan ${moves} lépésből.`)}else{lock=true;let prev=first.b;first=null;setTimeout(()=>{b.textContent=prev.textContent='?';b.classList.remove('open');prev.classList.remove('open');lock=false},750)}};board.append(b)})}
 // Falbontó / Breakout.
 function renderBreakout(){
- content.innerHTML=statusMarkup('Kattints a játéktérre vagy az indítógombra a kezdéshez. Mozgasd az ütőt a nyilakkal vagy az egérrel!')+`<div class="arcade-wrap"><canvas class="arcade-canvas" id="breakout" width="600" height="420" aria-label="Falbontó játéktér — kattints az indításhoz"></canvas><div class="scoreline">PONT: <strong id="bs">0</strong>　·　ÉLET: <strong id="bl">3 / 3</strong></div><button class="action-btn" id="bstart">▶ INDÍTÁS / ÚJRAKEZDÉS</button><div class="help">← → nyilak vagy egér · Érintőképernyőn húzd az ütőt</div></div>`;
+ content.innerHTML=statusMarkup('Kattints a játéktérre a kezdéshez. Mozgasd az ütőt a nyilakkal vagy az egérrel!')+`<div class="arcade-wrap"><canvas class="arcade-canvas" id="breakout" width="600" height="420" aria-label="Falbontó játéktér — kattints az indításhoz"></canvas><div class="scoreline">PONT: <strong id="bs">0</strong>　·　ÉLET: <strong id="bl">3 / 3</strong></div><div class="help">KATTINTS A JÁTÉKTÉRRE A KEZDÉSHEZ · ← → NYILAK VAGY EGÉR · ÉRINTŐKÉPERNYŐN HÚZD AZ ÜTŐT</div></div>`;
  const c=$('#breakout'),ctx=c.getContext('2d');
  const paddle={x:250,y:390,w:100,h:10};
  const colors=['#f3bd4f','#e87945','#d75a43','#8fb58b'];
@@ -34,14 +34,14 @@ function renderBreakout(){
   for(let r=0;r<4;r++)for(let col=0;col<9;col++)bricks.push({x:25+col*62,y:45+r*25,w:54,h:14,alive:true,color:colors[r]});
   paddle.x=250;ball=makeBall();score=0;lives=3;running=false;
   $('#bs').textContent='0';updateLives();draw();
-  setStatus('Kattints a játéktérre vagy az indítógombra a kezdéshez.');
+  setStatus('Kattints a játéktérre a kezdéshez.');
  }
  function draw(){
   ctx.fillStyle='#171a17';ctx.fillRect(0,0,c.width,c.height);
   bricks.forEach(b=>{if(b.alive){ctx.fillStyle=b.color;ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,4);ctx.fill()}});
   ctx.fillStyle='#f4efdf';ctx.beginPath();ctx.roundRect(paddle.x,paddle.y,paddle.w,paddle.h,5);ctx.fill();
   if(ball){ctx.fillStyle='#d8f06a';ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill()}
-  if(!running){ctx.fillStyle='#171a17cc';ctx.fillRect(0,0,c.width,c.height);ctx.textAlign='center';ctx.fillStyle='#f3bd4f';ctx.font='bold 27px sans-serif';ctx.fillText('KATTINTS A KEZDÉSHEZ',300,205);ctx.fillStyle='#f4efdf';ctx.font='14px sans-serif';ctx.fillText('vagy nyomd meg az INDÍTÁS gombot',300,232)}
+  if(!running){ctx.fillStyle='#171a17cc';ctx.fillRect(0,0,c.width,c.height);ctx.textAlign='center';ctx.fillStyle='#f3bd4f';ctx.font='bold 27px sans-serif';ctx.fillText('KATTINTS A KEZDÉSHEZ',300,205);ctx.fillStyle='#f4efdf';ctx.font='14px sans-serif';ctx.fillText('a kezdéshez kattints a játéktérre',300,232)}
  }
  function start(){if(running)return;reset();running=true;draw();setStatus('Játékban vagy — hajrá! Három életed van.');timer=setInterval(tick,16)}
  function end(message){clearInterval(timer);timer=null;running=false;draw();setStatus(`<strong>${message}</strong> Pontszám: ${score}. Kattints a játéktérre az újrakezdéshez.`)}
@@ -69,7 +69,7 @@ function renderBreakout(){
  document.onkeydown=e=>{if(current!=='breakout')return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();move(paddle.x+paddle.w/2+(e.key==='ArrowLeft'?-28:28))}};
  c.onmousemove=e=>{const r=c.getBoundingClientRect();move((e.clientX-r.left)/r.width*c.width)};
  c.ontouchmove=e=>{e.preventDefault();const r=c.getBoundingClientRect();move((e.touches[0].clientX-r.left)/r.width*c.width)};
- c.onclick=()=>{if(!running)start()};$('#bstart').onclick=start;reset();
+ c.onclick=()=>{if(!running)start()};reset();
 }
 // Kígyó.
 function renderSnake(){
