@@ -5,19 +5,69 @@ function selectGame(g){current=g;document.querySelectorAll('.tab').forEach(b=>b.
 // Torpedó: három összefüggő, több mezős hajó (3, 2, 2).
 function renderBattleship(){const n=6,ships=new Set(),fleet=[3,2,2];function place(len){for(let a=0;a<500;a++){let h=Math.random()<.5,x=Math.floor(Math.random()*(n-(h?len:1)+1)),y=Math.floor(Math.random()*(n-(h?1:len)+1)),cells=Array.from({length:len},(_,k)=>(y+(h?0:k))*n+x+(h?k:0)),near=[];cells.forEach(v=>{let cx=v%n,cy=Math.floor(v/n);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){let xx=cx+dx,yy=cy+dy;if(xx>=0&&xx<n&&yy>=0&&yy<n)near.push(yy*n+xx)}});if(near.every(v=>!ships.has(v))){cells.forEach(v=>ships.add(v));return true}}return false}do{ships.clear()}while(!fleet.every(place));let hits=0,shots=0;content.innerHTML=statusMarkup('Három hajó: egy 3 mezős és két 2 mezős. Találd el mind a 7 hajómezőt!')+`<div class="battleship-layout"><div class="board" id="battle-board" style="grid-template-columns:repeat(6,48px)"></div><div class="legend"><b>JELMAGYARÁZAT</b><br>✳ Találat<br>· Üres víz<br><br><b id="battle-score">0 / 7 találat</b><br>3 hajó · 7 mező</div></div>`;let board=$('#battle-board');for(let i=0;i<36;i++){let b=document.createElement('button');b.className='cell';b.setAttribute('aria-label',`Sor ${Math.floor(i/6)+1}, oszlop ${i%6+1}`);b.onclick=()=>{if(b.disabled)return;shots++;if(ships.has(i)){hits++;b.textContent='✳';b.classList.add('hit')}else{b.textContent='·';b.classList.add('miss')}b.disabled=true;$('#battle-score').textContent=`${hits} / 7 találat`;setStatus(hits===7?'<strong>Győzelem!</strong> Megtaláltad mindhárom hajót.':`Találatok: <strong>${hits}/7</strong> · Lövések: ${shots}`)};board.append(b)}}
 function renderTic(){
- let cells=Array(9).fill(''),turn='X',over=false,mode='two';
+ let cells=Array(9).fill(''),turn='X',over=false,mode='two',restartTimer=null,aiTimer=null;
  content.innerHTML=statusMarkup('X játékos következik.')+
  `<div class="tic-options"><button class="action-btn active" id="tic-two">2 JÁTÉKOS</button><button class="action-btn" id="tic-ai">GÉP ELLEN</button></div><div class="board tic-board" id="tic-board"></div><div class="scoreline" id="tic-score">JÁTÉKOS 1: X　·　JÁTÉKOS 2: O</div>`;
  const board=$('#tic-board'),wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
  function winner(a){return wins.find(line=>a[line[0]]&&a[line[0]]===a[line[1]]&&a[line[1]]===a[line[2]])}
- function finishIfNeeded(){let win=winner(cells);if(win){over=true;setStatus(`<strong>${cells[win[0]]} nyert!</strong>`);win.forEach(j=>board.children[j].style.background='#dce8dc');board.querySelectorAll('button').forEach(x=>x.disabled=true);return true}if(cells.every(Boolean)){over=true;setStatus('Döntetlen! Indíts új kört.');return true}return false}
- function minimax(a,isMax,depth=0){let w=winner(a);if(w)return a[w[0]]==='O'?10-depth:depth-10;if(a.every(Boolean))return 0;let best=isMax?-Infinity:Infinity;for(let i=0;i<9;i++)if(!a[i]){a[i]=isMax?'O':'X';let score=minimax(a,!isMax,depth+1);a[i]='';best=isMax?Math.max(best,score):Math.min(best,score)}return best}
- function aiMove(){if(over)return;let best=-Infinity,choice=-1;for(let i=0;i<9;i++)if(!cells[i]){cells[i]='O';let score=minimax(cells,false);cells[i]='';if(score>best){best=score;choice=i}}if(choice>=0){play(choice,'O');}}
- function play(i,mark){if(over||cells[i])return;cells[i]=mark;let b=board.children[i];b.textContent=mark;b.style.color=mark==='X'?'#f3bd4f':'#e87945';if(finishIfNeeded())return;turn=mark==='X'?'O':'X';setStatus(mode==='ai'&&turn==='O'?'A gép gondolkodik…':`${turn} következik.`)}
- function humanMove(i){if(over||cells[i]||(mode==='ai'&&turn==='O'))return;play(i,turn);if(mode==='ai'&&!over&&turn==='O')setTimeout(aiMove,280)}
- function newRound(){cells=Array(9).fill('');turn='X';over=false;board.innerHTML='';cells.forEach((_,i)=>{let b=document.createElement('button');b.className='cell';b.onclick=()=>humanMove(i);board.append(b)});setStatus('X játékos következik.');}
- function setMode(next){mode=next;$('#tic-two').classList.toggle('active',mode==='two');$('#tic-ai').classList.toggle('active',mode==='ai');$('#tic-score').textContent=mode==='ai'?'TE: X　·　GÉP: O':'JÁTÉKOS 1: X　·　JÁTÉKOS 2: O';newRound()}
- $('#tic-two').onclick=()=>setMode('two');$('#tic-ai').onclick=()=>setMode('ai');newRound();
+ function finishIfNeeded(){
+  let win=winner(cells),result='';
+  if(win){
+   over=true;result=`<strong>${cells[win[0]]} nyert!</strong>`;
+   win.forEach(j=>board.children[j].style.background='#dce8dc');
+   board.querySelectorAll('button').forEach(x=>x.disabled=true);
+  }else if(cells.every(Boolean)){
+   over=true;result='Döntetlen!';
+   board.querySelectorAll('button').forEach(x=>x.disabled=true);
+  }else return false;
+  setStatus(`${result} Új kör indul 1,5 másodperc múlva…`);
+  clearTimeout(restartTimer);
+  restartTimer=setTimeout(()=>{if(current==='tic')newRound()},1500);
+  return true;
+ }
+ function play(i,mark){
+  if(over||cells[i])return;
+  cells[i]=mark;
+  let b=board.children[i];b.textContent=mark;b.style.color=mark==='X'?'#f3bd4f':'#e87945';
+  if(finishIfNeeded())return;
+  turn=mark==='X'?'O':'X';
+  setStatus(mode==='ai'&&turn==='O'?'A gép következik…':`${turn} következik.`);
+ }
+ function aiMove(){
+  if(over||mode!=='ai'||turn!=='O')return;
+  const empty=cells.map((v,i)=>v?null:i).filter(i=>i!==null);
+  if(!empty.length)return;
+  // Szándékosan könnyű ellenfél: véletlenszerű szabad mezőt választ.
+  const choice=empty[Math.floor(Math.random()*empty.length)];
+  play(choice,'O');
+ }
+ function humanMove(i){
+  if(over||cells[i]||(mode==='ai'&&turn==='O'))return;
+  play(i,turn);
+  if(mode==='ai'&&!over&&turn==='O'){
+   clearTimeout(aiTimer);
+   aiTimer=setTimeout(aiMove,350);
+  }
+ }
+ function newRound(){
+  clearTimeout(restartTimer);restartTimer=null;
+  clearTimeout(aiTimer);aiTimer=null;
+  cells=Array(9).fill('');turn='X';over=false;board.innerHTML='';
+  cells.forEach((_,i)=>{let b=document.createElement('button');b.className='cell';b.setAttribute('aria-label',`Mező ${i+1}`);b.onclick=()=>humanMove(i);board.append(b)});
+  setStatus(mode==='ai'?'Te következel X-szel.':'X játékos következik.');
+ }
+ function setMode(next){
+  clearTimeout(restartTimer);restartTimer=null;
+  clearTimeout(aiTimer);aiTimer=null;
+  mode=next;
+  $('#tic-two').classList.toggle('active',mode==='two');
+  $('#tic-ai').classList.toggle('active',mode==='ai');
+  $('#tic-score').textContent=mode==='ai'?'TE: X　·　GÉP: O':'JÁTÉKOS 1: X　·　JÁTÉKOS 2: O';
+  newRound();
+ }
+ $('#tic-two').onclick=()=>setMode('two');
+ $('#tic-ai').onclick=()=>setMode('ai');
+ newRound();
 }
 function renderMemory(){let icons=['🍋','🚀','🐙','🎸','🍀','🦊','🌙','⚽','🍓','🎨','🐳','🌵','🧩','🎧','🦋','🍉','🪐','🦉','🎲','🌻'],deck=[...icons,...icons].sort(()=>Math.random()-.5),first=null,lock=false,moves=0,pairs=0;content.innerHTML=statusMarkup('Fordíts fel két kártyát, és keresd a párokat! 20 pár vár rád.')+`<div class="memory-board" id="memory-board"></div><div class="scoreline">LÉPÉS: <strong id="moves">0</strong>　·　PÁR: <strong id="pairs">0 / 20</strong></div>`;let board=$('#memory-board');deck.forEach(emoji=>{let b=document.createElement('button');b.className='memory-card';b.textContent='?';b.setAttribute('aria-label','Lefordított kártya');b.onclick=()=>{if(lock||b.classList.contains('open')||b.classList.contains('done'))return;b.textContent=emoji;b.classList.add('open');if(!first){first={b,emoji};return}moves++;$('#moves').textContent=moves;if(first.emoji===emoji){b.classList.replace('open','done');first.b.classList.replace('open','done');first=null;pairs++;$('#pairs').textContent=`${pairs} / 20`;if(pairs===20)setStatus(`<strong>Szép munka!</strong> Mind a 20 pár megvan ${moves} lépésből.`)}else{lock=true;let prev=first.b;first=null;setTimeout(()=>{b.textContent=prev.textContent='?';b.classList.remove('open');prev.classList.remove('open');lock=false},750)}};board.append(b)})}
 // Falbontó / Breakout.
